@@ -1,0 +1,4 @@
+//para que este seguro mi contraseña y no se suba a github
+
+node_modules/
+.env

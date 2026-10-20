@@ -1,0 +1,481 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario de Productos</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        header {
+            background: #123b64;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .panel {
+            background: white;
+            padding: 24px;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000010;
+        }
+
+        .formulario {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px;
+        }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .campo.completo {
+            grid-column: 1 / -1;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .guardar {
+            background: #176b45;
+            color: white;
+        }
+
+        .cancelar {
+            background: #64748b;
+            color: white;
+        }
+
+        .editar {
+            background: #dbeafe;
+            color: #1d4ed8;
+            margin: 2px;
+        }
+
+        .eliminar {
+            background: #fee2e2;
+            color: #b91c1c;
+            margin: 2px;
+        }
+
+        .acciones {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        .tabla-contenedor {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        th, td {
+            padding: 13px 10px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #eaf0f7;
+        }
+
+        #mensaje {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .estadisticas {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .tarjeta {
+            flex: 1;
+            min-width: 160px;
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            box-shadow: 0 3px 12px #00000010;
+        }
+
+        .tarjeta strong {
+            display: block;
+            font-size: 26px;
+            margin-top: 8px;
+            color: #123b64;
+        }
+
+        @media (max-width: 600px) {
+            .formulario {
+                grid-template-columns: 1fr;
+            }
+
+            .campo.completo {
+                grid-column: auto;
+            }
+
+            main {
+                padding: 0 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Inventario de Productos</h1>
+        <p>Sistema de gestión de productos electrónicos</p>
+    </header>
+
+    <main>
+        <section class="estadisticas">
+            <div class="tarjeta">
+                Productos registrados
+                <strong id="totalProductos">0</strong>
+            </div>
+
+            <div class="tarjeta">
+                Unidades en stock
+                <strong id="totalStock">0</strong>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2 id="tituloFormulario">Registrar producto</h2>
+
+            <form id="formularioProducto">
+                <div class="formulario">
+                    <div class="campo">
+                        <label for="nombre">Nombre del producto *</label>
+                        <input id="nombre" type="text" maxlength="100"
+                               required placeholder="Ej. Laptop Lenovo">
+                    </div>
+
+                    <div class="campo">
+                        <label for="precio">Precio (S/) *</label>
+                        <input id="precio" type="number" min="0.01"
+                               step="0.01" required placeholder="Ej. 2500">
+                    </div>
+
+                    <div class="campo">
+                        <label for="stock">Cantidad en stock *</label>
+                        <input id="stock" type="number" min="0"
+                               step="1" required placeholder="Ej. 10">
+                    </div>
+
+                    <div class="campo completo">
+                        <label for="descripcion">Descripción</label>
+                        <textarea id="descripcion" rows="3"
+                                  placeholder="Descripción del producto"></textarea>
+                    </div>
+                </div>
+
+                <div class="acciones">
+                    <button class="guardar" type="submit" id="botonGuardar">
+                        Registrar producto
+                    </button>
+
+                    <button class="cancelar" type="button" id="botonCancelar"
+                            hidden>
+                        Cancelar edición
+                    </button>
+                </div>
+
+                <p id="mensaje" role="status"></p>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Productos registrados</h2>
+
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Descripción</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="listaProductos">
+                        <tr>
+                            <td colspan="6">Cargando productos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const API = "/api/productos";
+
+        const formulario = document.getElementById("formularioProducto");
+        const lista = document.getElementById("listaProductos");
+        const mensaje = document.getElementById("mensaje");
+        const botonGuardar = document.getElementById("botonGuardar");
+        const botonCancelar = document.getElementById("botonCancelar");
+
+        let productoEditando = null;
+
+        async function cargarProductos() {
+            try {
+                const respuesta = await fetch(API);
+
+                if (!respuesta.ok) {
+                    throw new Error("No se pudieron consultar los productos.");
+                }
+
+                const productos = await respuesta.json();
+
+                document.getElementById("totalProductos").textContent =
+                    productos.length;
+
+                document.getElementById("totalStock").textContent =
+                    productos.reduce(
+                        (total, producto) => total + Number(producto.stock),
+                        0
+                    );
+
+                lista.replaceChildren();
+
+                if (productos.length === 0) {
+                    const fila = document.createElement("tr");
+                    const celda = document.createElement("td");
+                    celda.colSpan = 6;
+                    celda.textContent = "No hay productos registrados.";
+                    fila.appendChild(celda);
+                    lista.appendChild(fila);
+                    return;
+                }
+
+                productos.forEach(producto => {
+                    const fila = document.createElement("tr");
+
+                    [
+                        producto.id,
+                        producto.nombre,
+                        producto.descripcion || "Sin descripción",
+                        "S/ " + Number(producto.precio).toFixed(2),
+                        producto.stock
+                    ].forEach(valor => {
+                        const celda = document.createElement("td");
+                        celda.textContent = valor;
+                        fila.appendChild(celda);
+                    });
+
+                    const celdaAcciones = document.createElement("td");
+
+                    const botonEditar = document.createElement("button");
+                    botonEditar.textContent = "Editar";
+                    botonEditar.className = "editar";
+                    botonEditar.type = "button";
+                    botonEditar.addEventListener("click", () => editarProducto(producto));
+
+                    const botonEliminar = document.createElement("button");
+                    botonEliminar.textContent = "Eliminar";
+                    botonEliminar.className = "eliminar";
+                    botonEliminar.type = "button";
+                    botonEliminar.addEventListener("click", () => eliminarProducto(producto));
+
+                    celdaAcciones.append(botonEditar, botonEliminar);
+                    fila.appendChild(celdaAcciones);
+                    lista.appendChild(fila);
+                });
+            } catch (error) {
+                lista.replaceChildren();
+                const fila = document.createElement("tr");
+                const celda = document.createElement("td");
+                celda.colSpan = 6;
+                celda.textContent = error.message;
+                fila.appendChild(celda);
+                lista.appendChild(fila);
+            }
+        }
+
+        formulario.addEventListener("submit", async evento => {
+            evento.preventDefault();
+
+            const nombre = document.getElementById("nombre").value.trim();
+            const precio = Number(document.getElementById("precio").value);
+            const stockTexto = document.getElementById("stock").value;
+            const stock = Number(stockTexto);
+            const descripcion =
+                document.getElementById("descripcion").value.trim();
+
+            if (
+                !nombre ||
+                !Number.isFinite(precio) ||
+                precio <= 0 ||
+                stockTexto.trim() === "" ||
+                !Number.isInteger(stock) ||
+                stock < 0
+            ) {
+                mensaje.textContent =
+                    "Verifica el nombre, el precio y la cantidad en stock.";
+                return;
+            }
+
+            const producto = { nombre, descripcion, precio, stock };
+            const editando = productoEditando !== null;
+
+            try {
+                const respuesta = await fetch(
+                    editando ? `${API}/${productoEditando}` : API,
+                    {
+                        method: editando ? "PUT" : "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(producto)
+                    }
+                );
+
+                const resultado = await respuesta.json();
+
+                if (!respuesta.ok) {
+                    throw new Error(
+                        resultado.mensaje || resultado.error ||
+                        "No se pudo guardar el producto."
+                    );
+                }
+
+                mensaje.textContent = resultado.mensaje ||
+                    (editando ? "Producto actualizado correctamente." :
+                                "Producto registrado correctamente.");
+
+                formulario.reset();
+                salirDeEdicion();
+                await cargarProductos();
+            } catch (error) {
+                mensaje.textContent = "Error: " + error.message;
+            }
+        });
+
+        function editarProducto(producto) {
+            productoEditando = producto.id;
+
+            document.getElementById("nombre").value = producto.nombre;
+            document.getElementById("precio").value = producto.precio;
+            document.getElementById("stock").value = producto.stock;
+            document.getElementById("descripcion").value =
+                producto.descripcion || "";
+
+            document.getElementById("tituloFormulario").textContent =
+                "Editar producto #" + producto.id;
+
+            botonGuardar.textContent = "Guardar cambios";
+            botonCancelar.hidden = false;
+
+            mensaje.textContent = "Modifica los datos y guarda los cambios.";
+            document.getElementById("nombre").focus();
+        }
+
+        function salirDeEdicion() {
+            productoEditando = null;
+
+            document.getElementById("tituloFormulario").textContent =
+                "Registrar producto";
+
+            botonGuardar.textContent = "Registrar producto";
+            botonCancelar.hidden = true;
+        }
+
+        botonCancelar.addEventListener("click", () => {
+            formulario.reset();
+            salirDeEdicion();
+            mensaje.textContent = "";
+        });
+
+        async function eliminarProducto(producto) {
+            const confirmar = confirm(
+                `¿Seguro que deseas eliminar "${producto.nombre}" (ID ${producto.id})?`
+            );
+
+            if (!confirmar) return;
+
+            try {
+                const respuesta = await fetch(`${API}/${producto.id}`, {
+                    method: "DELETE"
+                });
+
+                const resultado = await respuesta.json();
+
+                if (!respuesta.ok) {
+                    throw new Error(
+                        resultado.mensaje || resultado.error ||
+                        "No se pudo eliminar el producto."
+                    );
+                }
+
+                if (productoEditando === producto.id) {
+                    formulario.reset();
+                    salirDeEdicion();
+                }
+
+                mensaje.textContent = resultado.mensaje ||
+                    "Producto eliminado correctamente.";
+
+                await cargarProductos();
+            } catch (error) {
+                mensaje.textContent = "Error: " + error.message;
+            }
+        }
+
+        cargarProductos();
+    </script>
+</body>
+</html>
